@@ -1,6 +1,5 @@
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import {
-  Alert,
   FormControl,
   IconButton,
   InputAdornment,
@@ -10,9 +9,12 @@ import {
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import React from 'react';
+import bcrypt from 'bcryptjs';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContainer, TextfieldBox } from '../styles/AuthStyle';
+import { toast } from 'react-toastify';
 
+const salt = bcrypt.genSaltSync(10);
 const Signin = () => {
   const navigate = useNavigate();
   const [values, setValues] = React.useState({
@@ -21,7 +23,6 @@ const Signin = () => {
   });
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const [success, setSuccess] = React.useState(false);
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
@@ -34,6 +35,7 @@ const Signin = () => {
     setValues({ ...values, [prop]: event.target.value });
   };
 
+  const hashedPassword = bcrypt.hashSync(values.password, salt);
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -42,33 +44,33 @@ const Signin = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: values.email,
-        password: values.password,
+        password: hashedPassword,
       }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        response.json();
+         setLoading(false);
+        if (response.status === 200) {
+          toast.success('Login Successful');
+        } else if (response.status === 400){
+          toast.error('Wrong Credentials');
+        } else {
+          toast.error('Login Failed');
+        }
+      })
       .then((data) => {
-        setLoading(false);
-        setSuccess(true);
+       
         if (data === 'go') {
           navigate('/clock');
           localStorage.setItem('activeUser', values.email);
         }
       })
-      .catch(err=>console.log)
-      ;
+      .catch((err) => {
+        console.log(err);
+      });
   };
   return (
     <AuthContainer>
-      {success && (
-        <Alert
-          severity='success'
-          onClose={() => {
-            setSuccess(false);
-          }}
-        >
-          Login Successful
-        </Alert>
-      )}
       <Typography variant='h4' fontWeight={700} align='center' mb={2}>
         Sign In
       </Typography>

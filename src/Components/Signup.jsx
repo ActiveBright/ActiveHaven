@@ -1,6 +1,5 @@
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import {
-  Alert,
   Box,
   FormControl,
   FormControlLabel,
@@ -14,9 +13,12 @@ import {
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import React from 'react';
+import bcrypt from 'bcryptjs';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContainer, TextfieldBox } from '../styles/AuthStyle';
+import { toast } from 'react-toastify';
 
+const salt = bcrypt.genSaltSync(10);
 const Signup = () => {
   const navigate = useNavigate();
   const [values, setValues] = React.useState({
@@ -41,7 +43,9 @@ const Signup = () => {
     setValues({ ...values, [prop]: event.target.value });
   };
   const [loading, setLoading] = React.useState(false);
-  const [success, setSuccess] = React.useState(false);
+
+  const hashedPassword = bcrypt.hashSync(values.password, salt);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -51,37 +55,33 @@ const Signup = () => {
       body: JSON.stringify({
         name: values.name,
         email: values.email,
-        password: values.password,
+        password: hashedPassword,
         phone: values.phone,
         age: values.age,
         sex: values.sex,
       }),
     })
-      .then((response) => response.json())
-      .then((data) => {
+      .then((response) => {
+        response.json();
         setLoading(false);
-        setSuccess(true);
+        if (response.status === 200) {
+          toast.success('Login Successful');
+        } else {
+          toast.error('Login Failed');
+        }
+      })
+      .then((data) => {
         if (data === 'go') {
           setTimeout(() => {
             navigate('/');
           }, 2000);
         }
       })
-      .catch(console.log)
+      .catch(console.log);
   };
 
   return (
     <AuthContainer>
-      {success && (
-        <Alert
-          severity='success'
-          onClose={() => {
-            setSuccess(false);
-          }}
-        >
-          Successfully Registered
-        </Alert>
-      )}
       <Typography variant='h4' fontWeight={700} align='center' mb={2}>
         Sign Up
       </Typography>
