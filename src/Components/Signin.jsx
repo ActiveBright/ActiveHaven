@@ -9,12 +9,10 @@ import {
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import React from 'react';
-import bcrypt from 'bcryptjs';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContainer, TextfieldBox } from '../styles/AuthStyle';
 import { toast } from 'react-toastify';
 
-const salt = bcrypt.genSaltSync(10);
 const Signin = () => {
   const navigate = useNavigate();
   const [values, setValues] = React.useState({
@@ -35,7 +33,6 @@ const Signin = () => {
     setValues({ ...values, [prop]: event.target.value });
   };
 
-  const hashedPassword = bcrypt.hashSync(values.password, salt);
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -44,27 +41,28 @@ const Signin = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: values.email,
-        password: hashedPassword,
+        password: values.password,
       }),
     })
+    .then((response) => response.json())
       .then((response) => {
-        response.json();
-         setLoading(false);
-        if (response.status === 200) {
+       console.log(response)
+        setLoading(false);
+        if (response === 'go') {
           toast.success('Login Successful');
-        } else if (response.status === 400){
-          toast.error('Wrong Credentials');
-        } else {
-          toast.error('Login Failed');
-        }
-      })
-      .then((data) => {
-       
-        if (data === 'go') {
-          navigate('/clock');
           localStorage.setItem('activeUser', values.email);
+          setTimeout(() => {
+            navigate('/clock');
+          }, 2000);
+        } else {
+          if (response.status === 400) {
+            toast.error('Wrong Credentials');
+          } else {
+            toast.error('Login Failed');
+          }
         }
       })
+
       .catch((err) => {
         console.log(err);
       });

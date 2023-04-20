@@ -13,12 +13,10 @@ import {
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import React from 'react';
-import bcrypt from 'bcryptjs';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContainer, TextfieldBox } from '../styles/AuthStyle';
 import { toast } from 'react-toastify';
 
-const salt = bcrypt.genSaltSync(10);
 const Signup = () => {
   const navigate = useNavigate();
   const [values, setValues] = React.useState({
@@ -43,9 +41,6 @@ const Signup = () => {
     setValues({ ...values, [prop]: event.target.value });
   };
   const [loading, setLoading] = React.useState(false);
-
-  const hashedPassword = bcrypt.hashSync(values.password, salt);
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -55,28 +50,24 @@ const Signup = () => {
       body: JSON.stringify({
         name: values.name,
         email: values.email,
-        password: hashedPassword,
+        password: values.password,
         phone: values.phone,
         age: values.age,
         sex: values.sex,
       }),
     })
+    .then((response) => response.json())
       .then((response) => {
-        response.json();
-        setLoading(false);
-        if (response.status === 200) {
-          toast.success('Login Successful');
-        } else {
-          toast.error('Login Failed');
-        }
-      })
-      .then((data) => {
-        if (data === 'go') {
+        if (response.data === 'go') {
+          toast.success('Signup Successful');
           setTimeout(() => {
             navigate('/');
           }, 2000);
+        } else if (response.status !== 200) {
+          toast.error('Signup Failed');
         }
       })
+
       .catch(console.log);
   };
 

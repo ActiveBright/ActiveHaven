@@ -69,7 +69,7 @@ const BannerBox = styled(Box)`
   height: 100%;
   padding-bottom: 64px;
   padding-left: 16px;
-  background:${({ img }) => `url(${img})`};
+  background: ${({ img }) => `url(${img})`};
   //   background-color: rgba(52, 114, 149, 0.5);
   background-size: 100% 100%;
   display: flex;
